@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office Attendance 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --surface: #161618;
+    --surface2: #1e1e21;
+    --surface3: #252528;
+    --border: #2a2a2e;
+    --border2: #3a3a3f;
+    --text: #e8e8ea;
+    --muted: #6b6b72;
+    --accent: #c8f060;
+    --danger: #f06060;
+    --warn: #f0b860;
+    --success: #60f0a8;
+    --check-bg: rgba(96,240,168,0.12);
+    --x-bg: rgba(240,96,96,0.12);
+    --exempt-bg: rgba(184,160,240,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 32px 24px 80px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 36px; flex-wrap: wrap; gap: 12px;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem; letter-spacing: -0.04em; line-height: 1; }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .year-badge {
+    font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.2em; color: var(--muted);
+    border: 1px solid var(--border); padding: 6px 12px; border-radius: 4px;
+  }
+  .btn-manage {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 0.75rem; letter-spacing: 0.05em; padding: 7px 14px;
+    border-radius: 6px; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .btn-manage:hover { border-color: var(--accent); background: var(--surface2); color: var(--accent); }
+  .instructions { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+  /* RANGE CARDS */
+  .ranges-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-label {
+    font-family: 'Syne', sans-serif; font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+  }
+  .ranges-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 32px;
+  }
+  @media (max-width: 1100px) { .ranges-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 800px)  { .ranges-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px)  { .ranges-grid { grid-template-columns: 1fr; } }
+
+  .range-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px 12px;
+    position: relative; overflow: hidden; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .range-card:hover { border-color: var(--border2); }
+  .range-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; background: var(--range-color, var(--accent));
+  }
+  .range-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+  .range-name {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem;
+    letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase;
+  }
+  .range-edit-hint { font-size: 0.6rem; color: var(--muted); opacity: 0; transition: opacity 0.15s; }
+  .range-card:hover .range-edit-hint { opacity: 1; }
+  .range-dates { font-size: 0.78rem; color: var(--text); margin-bottom: 10px; }
+  .range-progress-wrap { display: flex; align-items: center; gap: 10px; }
+  .progress-bar { flex: 1; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width 0.3s ease; }
+  .range-count { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; white-space: nowrap; }
+  .range-count.met { color: var(--success); }
+  .range-count.warn { color: var(--warn); }
+  .range-req { font-size: 0.67rem; color: var(--muted); margin-top: 4px; }
+
+  /* LEGEND */
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin-bottom: 24px; padding: 12px 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; align-items: center; font-size: 0.72rem;
+  }
+  .legend-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .legend-item { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+  .legend-swatch { width: 13px; height: 13px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; }
+
+  /* CALENDAR */
+  .months-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 18px; }
+  .month-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .month-header { padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .month-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; }
+  .month-tally { font-size: 0.72rem; color: var(--muted); background: var(--surface2); padding: 3px 9px; border-radius: 99px; }
+  .month-tally .num { color: var(--accent); font-weight: 500; }
+  .days-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); }
+  .day-header-row { display: grid; grid-template-columns: repeat(5, 1fr); padding: 7px 12px 3px; gap: 1px; }
+  .day-label { text-align: center; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .day-cell {
+    background: var(--surface); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 7px 4px;
+    cursor: pointer; user-select: none; transition: background 0.12s;
+    min-height: 50px; position: relative; gap: 2px;
+  }
+  .day-cell:hover { background: var(--surface2); }
+  .day-cell.state-check  { background: var(--check-bg); }
+  .day-cell.state-x      { background: var(--x-bg); }
+  .day-cell.state-exempt { background: var(--exempt-bg); }
+  .day-cell.today { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 1; }
+  .day-cell.past .day-num { color: var(--muted); }
+  .day-cell.future .day-num { color: var(--muted); opacity: 0.5; }
+  .day-num { font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 600; line-height: 1; }
+  .day-mark { font-size: 0.95rem; line-height: 1; }
+  .range-dots { position: absolute; bottom: 4px; right: 5px; display: flex; gap: 2px; align-items: center; }
+  .range-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .day-cell.filler { background: var(--bg); cursor: default; }
+  .day-cell.filler:hover { background: var(--bg); }
+
+  /* OVERLAY */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+
+  /* DRAWER */
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(480px, 100vw);
+    background: var(--surface); border-left: 1px solid var(--border2);
+    z-index: 101; display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    overflow: hidden;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-header {
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .drawer-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; }
+  .btn-close {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    width: 32px; height: 32px; border-radius: 6px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-close:hover { border-color: var(--danger); color: var(--danger); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .drawer-body::-webkit-scrollbar { width: 4px; }
+  .drawer-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+  /* RANGE LIST IN DRAWER */
+  .drawer-section-label {
+    font-family: 'Syne', sans-serif; font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .drawer-range-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .drawer-range-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 11px 12px;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    transition: border-color 0.15s; position: relative; overflow: hidden;
+  }
+  .drawer-range-item::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--ri-color, var(--accent));
+  }
+  .drawer-range-item:hover { border-color: var(--border2); }
+  .drawer-range-item.selected { border-color: var(--accent); background: var(--surface3); }
+  .ri-info { flex: 1; min-width: 0; }
+  .ri-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; margin-bottom: 2px; }
+  .ri-dates { font-size: 0.7rem; color: var(--muted); }
+  .ri-req { font-size: 0.66rem; color: var(--muted); margin-top: 1px; }
+  .ri-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .btn-icon {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    width: 28px; height: 28px; border-radius: 5px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-icon.del:hover { border-color: var(--danger); color: var(--danger); }
+  .empty-state { font-size: 0.75rem; color: var(--muted); text-align: center; padding: 16px 0; }
+
+  /* FORM */
+  .range-form {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 18px 18px 16px; margin-bottom: 16px;
+    animation: slideIn 0.18s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: translateY(0); } }
+  .form-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .form-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: background 0.15s; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+  input[type="text"],
+  input[type="date"],
+  input[type="number"] {
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    padding: 8px 10px; border-radius: 6px; width: 100%;
+    transition: border-color 0.15s; -webkit-appearance: none;
+  }
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  input[type="number"]:focus { outline: none; border-color: var(--accent); }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+
+  .color-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 3px; align-items: center; }
+  .color-swatch {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: border-color 0.12s, transform 0.12s; flex-shrink: 0;
+  }
+  .color-swatch:hover { transform: scale(1.18); }
+  .color-swatch.selected { border-color: #fff; }
+  .color-custom-wrap {
+    width: 24px; height: 24px; border-radius: 50%; overflow: hidden;
+    position: relative; cursor: pointer; flex-shrink: 0;
+    border: 2px solid var(--border2); background: #888;
+    transition: border-color 0.12s;
+  }
+  .color-custom-wrap:hover { transform: scale(1.18); }
+  .color-custom-wrap input[type="color"] {
+    position: absolute; inset: -6px; width: calc(100% + 12px);
+    height: calc(100% + 12px); border: none; background: none;
+    cursor: pointer; padding: 0; opacity: 0;
+  }
+  .color-custom-label {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; font-size: 0.65rem; color: #fff; pointer-events: none;
+  }
+
+  .form-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-primary {
+    flex: 1; background: var(--accent); color: #0e0e0f;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.05em; border: none; padding: 9px 16px;
+    border-radius: 6px; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    background: none; color: var(--muted);
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    border: 1px solid var(--border); padding: 9px 14px;
+    border-radius: 6px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--border2); color: var(--text); }
+
+  .btn-add-range {
+    width: 100%; background: none;
+    border: 1px dashed var(--border2); color: var(--muted);
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.78rem;
+    letter-spacing: 0.05em; padding: 11px;
+    border-radius: 8px; cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .btn-add-range:hover { border-color: var(--accent); color: var(--accent); }
+
+  .form-error { color: var(--danger); font-size: 0.7rem; margin-top: 8px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* EXPORT / IMPORT */
+  .io-section {
+    margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px;
+  }
+  .io-row { display: flex; gap: 8px; }
+  .btn-io {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+    background: var(--surface3); border: 1px solid var(--border2);
+    color: var(--text); font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 0.74rem; letter-spacing: 0.04em; padding: 9px 12px;
+    border-radius: 7px; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .btn-io:hover { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
+  .btn-io.danger:hover { border-color: var(--danger); color: var(--danger); background: var(--surface2); }
+  .io-hint { font-size: 0.67rem; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  .io-feedback {
+    font-size: 0.7rem; margin-top: 8px; padding: 7px 10px;
+    border-radius: 5px; display: none;
+  }
+  .io-feedback.ok  { display: block; background: rgba(96,240,168,0.1); color: var(--success); border: 1px solid rgba(96,240,168,0.2); }
+  .io-feedback.err { display: block; background: rgba(240,96,96,0.1);  color: var(--danger);  border: 1px solid rgba(240,96,96,0.2); }
+
+  @media (max-width: 600px) {
+    .months-container { grid-template-columns: 1fr; }
+    .logo { font-size: 1.5rem; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">office<span>.</span>tracker</div>
+    <div class="instructions">Click to toggle: unmarked → ✓ in office → ✗ not in → 🏖 exempt → unmarked</div>
+  </div>
+  <div class="header-right">
+    <div class="year-badge">2026</div>
+    <button class="btn-manage" onclick="openDrawer()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="3" width="14" height="2" rx="1" fill="currentColor"/>
+        <rect x="1" y="7" width="10" height="2" rx="1" fill="currentColor"/>
+        <rect x="1" y="11" width="14" height="2" rx="1" fill="currentColor"/>
+      </svg>
+      Manage
+    </button>
+  </div>
+</header>
+
+<div class="ranges-header">
+  <div class="section-label">Requirement Periods</div>
+</div>
+<div class="ranges-grid" id="rangesGrid"></div>
+
+<div class="legend">
+  <span class="legend-title">Legend</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--check-bg)">✓</span> In office</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--x-bg)">✗</span> Not in office</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--exempt-bg)">🏖</span> Exempt (holiday etc.)</span>
+  <span class="legend-item"><span style="outline:2px solid var(--accent);outline-offset:-1px;background:var(--surface);display:inline-block;width:13px;height:13px;border-radius:3px"></span> Today</span>
+  <span class="legend-item"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:2px;vertical-align:middle"></span> In a period</span>
+</div>
+
+<div class="months-container" id="monthsContainer"></div>
+
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-title">Manage</div>
+    <button class="btn-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody">
+    <div class="drawer-section-label">Current Periods</div>
+    <div class="drawer-range-list" id="drawerRangeList"></div>
+    <div id="rangeFormWrap"></div>
+    <button class="btn-add-range" id="btnAddRange" onclick="showForm(null)">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      Add New Period
+    </button>
+
+    <div class="io-section">
+      <div class="drawer-section-label" style="margin-bottom:10px">Save File</div>
+      <div class="io-row">
+        <button class="btn-io" onclick="exportSave()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1v8M4 6l3 3 3-3M1 10v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Export
+        </button>
+        <button class="btn-io" onclick="triggerImport()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M7 9V1M4 4l3-3 3 3M1 10v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Import
+        </button>
+        <input type="file" id="importInput" accept=".json" style="display:none" onchange="importSave(event)">
+      </div>
+      <div class="io-hint">Export saves your attendance and all periods to a <code style="font-size:0.65rem;background:var(--surface3);padding:1px 4px;border-radius:3px">.json</code> file. Import merges attendance in — use Replace to overwrite everything, or Merge to only add new days.</div>
+      <div id="ioFeedback" class="io-feedback"></div>
+    </div>
+
+    <div class="io-section danger-zone">
+      <div class="drawer-section-label" style="margin-bottom:10px">Reset</div>
+      <div class="io-row">
+        <button class="btn-io danger" onclick="clearAllDays()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M2 4h10M5 4V2.5A1 1 0 016 1.5h2a1 1 0 011 1V4M3.5 4l.5 8.5a1 1 0 001 1h4a1 1 0 001-1L11 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Clear all Days
+        </button>
+        <button class="btn-io danger" onclick="clearAllEdits()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M1.5 7a5.5 5.5 0 119 4M10.5 12.5l-1-2.5 2.5-.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          Clear all Edits
+        </button>
+      </div>
+      <div class="io-hint"><strong style="color:var(--text)">Clear all Days</strong> removes ✓ and ✗ marks but keeps 🏖 exempt days and your periods. <strong style="color:var(--text)">Clear all Edits</strong> wipes everything — every day mark and every period.</div>
+      <div id="resetFeedback" class="io-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PALETTE = ["#c8f060","#60c8f0","#f0b860","#b060f0","#f060b0","#60f0a8","#f09060","#60a8f0"];
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const YEAR = 2026;
+
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+// ── BAKED-IN DEFAULT STATE (from exported save 2026-05-08) ───────────────────
+const DEFAULT_RANGES = [
+  {"id":"8b73ti9","name":"May 27","start":"2026-02-16","end":"2026-05-15","color":"#b060f0","req":20},
+  {"id":"2k7bxor","name":"Jun 24","start":"2026-03-16","end":"2026-06-12","color":"#f060b0","req":20},
+  {"id":"7sgh0qj","name":"Jul 29","start":"2026-04-20","end":"2026-07-17","color":"#60f0a8","req":20},
+  {"id":"upq9d7y","name":"Aug 26","start":"2026-05-18","end":"2026-08-14","color":"#f09060","req":20},
+  {"id":"u3y89xp","name":"Sep 30","start":"2026-06-22","end":"2026-09-18","color":"#60a8f0","req":20},
+  {"id":"tf49dvp","name":"Oct 28","start":"2026-07-20","end":"2026-10-16","color":"#c8f060","req":20},
+  {"id":"obde146","name":"Dec 2","start":"2026-08-17","end":"2026-11-13","color":"#60c8f0","req":20},
+  {"id":"kbsgabz","name":"Jan 6 2027","start":"2026-09-21","end":"2026-12-18","color":"#60a8f0","req":20}
+];
+
+const DEFAULT_ATTENDANCE = {
+  "2026-02-16":"exempt",
+  "2026-05-18":"exempt","2026-05-19":"exempt","2026-05-20":"exempt",
+  "2026-05-21":"exempt","2026-05-22":"exempt","2026-05-25":"exempt",
+  "2026-06-19":"exempt",
+  "2026-06-29":"exempt","2026-06-30":"exempt",
+  "2026-07-01":"exempt","2026-07-02":"exempt","2026-07-03":"exempt",
+  "2026-09-07":"exempt",
+  "2026-10-12":"exempt",
+  "2026-11-11":"exempt",
+  "2026-11-23":"exempt","2026-11-24":"exempt","2026-11-25":"exempt",
+  "2026-11-26":"exempt","2026-11-27":"exempt"
+};
+
+let ranges = loadStore("ranges", DEFAULT_RANGES);
+let attendance = loadStore("attendance", DEFAULT_ATTENDANCE);
+
+function loadStore(key, def) {
+  try { const v = localStorage.getItem("ot26_" + key); return v ? JSON.parse(v) : def; } catch { return def; }
+}
+function saveStore(key, val) {
+  try { localStorage.setItem("ot26_" + key, JSON.stringify(val)); } catch {}
+}
+function saveAll() { saveStore("ranges", ranges); saveStore("attendance", attendance); }
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function dateKey(y, m, d) { return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
+function parseKey(k) { const [y,m,d] = k.split("-").map(Number); return new Date(y, m-1, d); }
+function isWeekday(dt) { const d = dt.getDay(); return d !== 0 && d !== 6; }
+function todayKey() { const t = new Date(); return dateKey(t.getFullYear(), t.getMonth(), t.getDate()); }
+function formatDate(key) {
+  const d = parseKey(key);
+  return `${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}, ${d.getFullYear()}`;
+}
+function getRangeIdxForDate(key) {
+  const d = parseKey(key);
+  for (let i = 0; i < ranges.length; i++) {
+    if (d >= parseKey(ranges[i].start) && d <= parseKey(ranges[i].end)) return i;
+  }
+  return -1;
+}
+function getRangeIndicesForDate(key) {
+  const d = parseKey(key);
+  return ranges.reduce((acc, r, i) => {
+    if (d >= parseKey(r.start) && d <= parseKey(r.end)) acc.push(i);
+    return acc;
+  }, []);
+}
+function dotsHtml(key) {
+  const idxs = getRangeIndicesForDate(key);
+  if (!idxs.length) return "";
+  return `<div class="range-dots">${idxs.map(i => `<div class="range-dot" style="background:${ranges[i].color}"></div>`).join("")}</div>`;
+}
+function getRangeTally(i) {
+  const r = ranges[i], s = parseKey(r.start), e = parseKey(r.end);
+  return Object.entries(attendance).filter(([k,v]) => {
+    if (v !== "check") return false;
+    const d = parseKey(k); return d >= s && d <= e;
+  }).length;
+}
+function markText(sv) {
+  return sv === "check" ? "✓" : sv === "x" ? "✗" : sv === "exempt" ? "🏖" : "";
+}
+
+// ── range cards ──────────────────────────────────────────────────────────────
+function renderRanges() {
+  const grid = document.getElementById("rangesGrid");
+  grid.innerHTML = "";
+  if (!ranges.length) {
+    grid.innerHTML = `<div style="color:var(--muted);font-size:0.78rem;padding:8px 0">No periods configured. Click "Manage" to add one.</div>`;
+    return;
+  }
+  const now = new Date(); now.setHours(0,0,0,0);
+  ranges.forEach((r, i) => {
+    const tally = getRangeTally(i);
+    const pct = Math.min(100, (tally / r.req) * 100);
+    const met = tally >= r.req;
+    const past = parseKey(r.end) < now;
+    const card = document.createElement("div");
+    card.className = "range-card";
+    card.id = `rc-${r.id}`;
+    card.style.setProperty("--range-color", r.color);
+    card.title = "Click to edit";
+    card.onclick = () => { openDrawer(); showForm(i); };
+    card.innerHTML = `
+      <div class="range-card-top">
+        <div class="range-name">${escHtml(r.name)}</div>
+        <div class="range-edit-hint">✎ edit</div>
+      </div>
+      <div class="range-dates">${formatDate(r.start)} → ${formatDate(r.end)}</div>
+      <div class="range-progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="pf-${r.id}" style="width:${pct}%;background:${r.color}"></div></div>
+        <div class="range-count ${met?"met":past?"warn":""}" id="rc2-${r.id}">${tally}/${r.req}${met?" ✓":""}</div>
+      </div>
+      <div class="range-req" id="rr-${r.id}">${met?"Requirement met!":past&&!met?"Not met — period ended":`${r.req-tally} more needed`}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function updateRangeCard(i) {
+  if (i < 0 || i >= ranges.length) return;
+  const r = ranges[i], tally = getRangeTally(i);
+  const pct = Math.min(100, (tally / r.req) * 100);
+  const met = tally >= r.req;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const past = parseKey(r.end) < now;
+  const pf = document.getElementById(`pf-${r.id}`);
+  const rc = document.getElementById(`rc2-${r.id}`);
+  const rr = document.getElementById(`rr-${r.id}`);
+  if (pf) pf.style.width = pct + "%";
+  if (rc) { rc.className = `range-count ${met?"met":past?"warn":""}`; rc.textContent = `${tally}/${r.req}${met?" ✓":""}`; }
+  if (rr) rr.textContent = met?"Requirement met!":past&&!met?"Not met — period ended":`${r.req-tally} more needed`;
+}
+
+// ── calendar ─────────────────────────────────────────────────────────────────
+const TODAY = todayKey();
+
+function renderCalendar() {
+  const container = document.getElementById("monthsContainer");
+  container.innerHTML = "";
+  for (let m = 0; m < 12; m++) {
+    const prefix = `${YEAR}-${String(m+1).padStart(2,"0")}`;
+    const mt = Object.entries(attendance).filter(([k,v]) => v==="check" && k.startsWith(prefix)).length;
+    const block = document.createElement("div");
+    block.className = "month-block";
+    block.innerHTML = `
+      <div class="month-header">
+        <div class="month-name">${MONTH_NAMES[m]}</div>
+        <div class="month-tally"><span class="num" id="mt-${m}">${mt}</span> in office</div>
+      </div>
+      <div class="day-header-row">${["Mon","Tue","Wed","Thu","Fri"].map(l=>`<div class="day-label">${l}</div>`).join("")}</div>
+      <div class="days-grid" id="grid-${m}"></div>
+    `;
+    container.appendChild(block);
+    renderMonth(m);
+  }
+}
+
+function renderMonth(m) {
+  const grid = document.getElementById(`grid-${m}`);
+  if (!grid) return;
+  grid.innerHTML = "";
+  const firstDay = new Date(YEAR, m, 1);
+  const skip = (firstDay.getDay() + 6) % 7;
+  const fillers = skip <= 4 ? skip : 0;
+  for (let i = 0; i < fillers; i++) {
+    const f = document.createElement("div"); f.className = "day-cell filler"; grid.appendChild(f);
+  }
+  const days = new Date(YEAR, m+1, 0).getDate();
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(YEAR, m, d);
+    if (!isWeekday(dt)) continue;
+    const key = dateKey(YEAR, m, d);
+    const sv = attendance[key] || "none";
+    const isToday = key === TODAY;
+    const isPast = key < TODAY;
+    const cell = document.createElement("div");
+    cell.className = `day-cell state-${sv}${isToday?" today":""}${isPast&&!isToday?" past":""}${!isPast&&!isToday?" future":""}`;
+    cell.dataset.key = key; cell.dataset.month = m;
+    cell.innerHTML = `
+      <div class="day-num">${d}</div>
+      <div class="day-mark">${markText(sv)}</div>
+      ${dotsHtml(key)}
+    `;
+    cell.addEventListener("click", () => toggleDay(key, m));
+    grid.appendChild(cell);
+  }
+}
+
+function refreshCalendarDots() {
+  document.querySelectorAll(".day-cell[data-key]").forEach(cell => {
+    const key = cell.dataset.key;
+    const existing = cell.querySelector(".range-dots");
+    if (existing) existing.remove();
+    const html = dotsHtml(key);
+    if (html) cell.insertAdjacentHTML("beforeend", html);
+  });
+}
+
+function toggleDay(key, month) {
+  const cur = attendance[key] || "none";
+  const next = cur==="none"?"check":cur==="check"?"x":cur==="x"?"exempt":"none";
+  if (next==="none") delete attendance[key]; else attendance[key] = next;
+  saveStore("attendance", attendance);
+  const cell = document.querySelector(`[data-key="${key}"]`);
+  if (cell) {
+    cell.className = cell.className.replace(/state-\S+/, `state-${next}`);
+    const mark = cell.querySelector(".day-mark");
+    if (mark) mark.textContent = markText(next);
+  }
+  const prefix = `${YEAR}-${String(month+1).padStart(2,"0")}`;
+  const mt = Object.entries(attendance).filter(([k,v])=>v==="check"&&k.startsWith(prefix)).length;
+  const el = document.getElementById(`mt-${month}`);
+  if (el) el.textContent = mt;
+  getRangeIndicesForDate(key).forEach(i => updateRangeCard(i));
+}
+
+// ── drawer ───────────────────────────────────────────────────────────────────
+function openDrawer() {
+  renderDrawerList();
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("overlay").classList.add("open");
+}
+function closeDrawer() {
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("overlay").classList.remove("open");
+  document.getElementById("rangeFormWrap").innerHTML = "";
+  activeEditIdx = null;
+}
+
+function renderDrawerList() {
+  const list = document.getElementById("drawerRangeList");
+  list.innerHTML = "";
+  if (!ranges.length) {
+    list.innerHTML = `<div class="empty-state">No periods yet. Add one below.</div>`;
+    return;
+  }
+  ranges.forEach((r, i) => {
+    const item = document.createElement("div");
+    item.className = "drawer-range-item" + (activeEditIdx === i ? " selected" : "");
+    item.id = `dri-${r.id}`;
+    item.style.setProperty("--ri-color", r.color);
+    item.innerHTML = `
+      <div class="ri-info">
+        <div class="ri-name">${escHtml(r.name)}</div>
+        <div class="ri-dates">${formatDate(r.start)} → ${formatDate(r.end)}</div>
+        <div class="ri-req">Requirement: ${r.req} days in office</div>
+      </div>
+      <div class="ri-actions">
+        <button class="btn-icon" title="Edit" onclick="event.stopPropagation();showForm(${i})">✎</button>
+        <button class="btn-icon del" title="Delete" onclick="event.stopPropagation();deleteRange(${i})">✕</button>
+      </div>
+    `;
+    item.addEventListener("click", () => showForm(i));
+    list.appendChild(item);
+  });
+}
+
+// ── form ─────────────────────────────────────────────────────────────────────
+let activeEditIdx = null;
+let formColor = PALETTE[0];
+
+function showForm(idx) {
+  activeEditIdx = idx;
+  const isNew = idx === null;
+  const r = isNew
+    ? { name: "", start: "", end: "", color: PALETTE[ranges.length % PALETTE.length], req: 20 }
+    : { ...ranges[idx] };
+  formColor = r.color;
+
+  document.querySelectorAll(".drawer-range-item").forEach(el => el.classList.remove("selected"));
+  if (!isNew && ranges[idx]) {
+    const el = document.getElementById(`dri-${ranges[idx].id}`);
+    if (el) el.classList.add("selected");
+  }
+
+  const wrap = document.getElementById("rangeFormWrap");
+  wrap.innerHTML = `
+    <div class="divider"></div>
+    <div class="range-form" id="rangeForm">
+      <div class="form-title">
+        <div class="form-dot" id="formDot" style="background:${formColor}"></div>
+        <span>${isNew ? "New Period" : `Edit: ${escHtml(r.name)}`}</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Period Name</label>
+          <input type="text" id="fName" value="${escAttr(r.name)}" placeholder="e.g. May 27" maxlength="60">
+        </div>
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="fStart" value="${r.start}">
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="fEnd" value="${r.end}">
+        </div>
+        <div class="form-group">
+          <label>Days Required</label>
+          <input type="number" id="fReq" value="${r.req}" min="1" max="999">
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <div class="color-row" id="colorRow">
+            ${PALETTE.map(c=>`<div class="color-swatch${c===formColor?" selected":""}" style="background:${c}" data-color="${c}" onclick="pickColor('${c}')"></div>`).join("")}
+            <div class="color-custom-wrap" title="Pick custom color" id="customWrap" style="background:${PALETTE.includes(formColor)?'#555':formColor}">
+              <input type="color" id="customColor" value="${formColor}" oninput="pickColor(this.value)">
+              <div class="color-custom-label">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="formError" class="form-error"></div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="cancelForm()">Cancel</button>
+        <button class="btn-primary" onclick="saveForm()">${isNew ? "Create Period" : "Save Changes"}</button>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const form = document.getElementById("rangeForm");
+    if (form) form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, 60);
+}
+
+function pickColor(c) {
+  formColor = c;
+  document.querySelectorAll(".color-swatch").forEach(el => el.classList.toggle("selected", el.dataset.color === c));
+  const dot = document.getElementById("formDot");
+  if (dot) dot.style.background = c;
+  const wrap = document.getElementById("customWrap");
+  if (wrap && !PALETTE.includes(c)) wrap.style.background = c;
+  const cc = document.getElementById("customColor");
+  if (cc) cc.value = c;
+}
+
+function cancelForm() {
+  document.getElementById("rangeFormWrap").innerHTML = "";
+  activeEditIdx = null;
+  document.querySelectorAll(".drawer-range-item").forEach(el => el.classList.remove("selected"));
+}
+
+function saveForm() {
+  const name = document.getElementById("fName").value.trim();
+  const start = document.getElementById("fStart").value;
+  const end = document.getElementById("fEnd").value;
+  const req = parseInt(document.getElementById("fReq").value, 10);
+  const errEl = document.getElementById("formError");
+
+  if (!name)         { errEl.textContent = "Please enter a period name."; return; }
+  if (!start)        { errEl.textContent = "Please set a start date."; return; }
+  if (!end)          { errEl.textContent = "Please set an end date."; return; }
+  if (end <= start)  { errEl.textContent = "End date must be after start date."; return; }
+  if (!req || req<1) { errEl.textContent = "Requirement must be at least 1."; return; }
+  errEl.textContent = "";
+
+  if (activeEditIdx === null) {
+    ranges.push({ id: uid(), name, start, end, color: formColor, req });
+  } else {
+    ranges[activeEditIdx] = { ...ranges[activeEditIdx], name, start, end, color: formColor, req };
+  }
+
+  saveAll();
+  cancelForm();
+  renderRanges();
+  refreshCalendarDots();
+  renderDrawerList();
+}
+
+function deleteRange(i) {
+  if (!confirm(`Delete "${ranges[i].name}"? Your attendance data won't be affected.`)) return;
+  if (activeEditIdx === i) cancelForm();
+  else if (activeEditIdx !== null && activeEditIdx > i) activeEditIdx--;
+  ranges.splice(i, 1);
+  saveAll();
+  renderRanges();
+  refreshCalendarDots();
+  renderDrawerList();
+}
+
+// ── export / import ───────────────────────────────────────────────────────────
+function exportSave() {
+  const payload = { version: 1, exportedAt: new Date().toISOString(), ranges, attendance };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `office-tracker-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showIoFeedback("ok", "Save file downloaded!");
+}
+
+function triggerImport() {
+  const inp = document.getElementById("importInput");
+  inp.value = "";
+  inp.click();
+}
+
+function importSave(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let payload;
+    try { payload = JSON.parse(e.target.result); } catch {
+      showIoFeedback("err", "Invalid file — couldn't parse JSON."); return;
+    }
+    if (!payload.attendance && !payload.ranges) {
+      showIoFeedback("err", "File doesn't look like an office-tracker save."); return;
+    }
+    const importedAttendance = payload.attendance || {};
+    const importedRanges = payload.ranges || [];
+    const inDays = Object.keys(importedAttendance).length;
+    const inPeriods = importedRanges.length;
+    const msg = [
+      `File contains:`,
+      `  • ${inDays} attendance day${inDays !== 1 ? "s" : ""}`,
+      `  • ${inPeriods} period${inPeriods !== 1 ? "s" : ""}`,
+      ``,
+      `OK = Replace everything`,
+      `Cancel = Merge (only adds new days, keeps existing)`,
+    ].join("\n");
+    const replace = confirm(msg);
+    if (replace) {
+      attendance = importedAttendance;
+      if (inPeriods) ranges = importedRanges;
+    } else {
+      for (const [k, v] of Object.entries(importedAttendance)) {
+        if (!attendance[k]) attendance[k] = v;
+      }
+      if (inPeriods) {
+        const existingIds = new Set(ranges.map(r => r.id));
+        for (const r of importedRanges) {
+          if (!existingIds.has(r.id)) ranges.push(r);
+        }
+      }
+    }
+    saveAll();
+    renderRanges();
+    renderCalendar();
+    renderDrawerList();
+    const mergedDays = Object.keys(attendance).length;
+    showIoFeedback("ok", replace
+      ? `Replaced with ${mergedDays} day${mergedDays !== 1 ? "s" : ""} and ${ranges.length} period${ranges.length !== 1 ? "s" : ""}.`
+      : `Merged. Now tracking ${mergedDays} day${mergedDays !== 1 ? "s" : ""}.`
+    );
+  };
+  reader.readAsText(file);
+}
+
+function showResetFeedback(type, msg) {
+  const el = document.getElementById("resetFeedback");
+  if (!el) return;
+  el.className = `io-feedback ${type}`;
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = "io-feedback"; el.textContent = ""; }, 5000);
+}
+
+function clearAllDays() {
+  const checks = Object.values(attendance).filter(v => v === "check").length;
+  const xs = Object.values(attendance).filter(v => v === "x").length;
+  const total = checks + xs;
+  if (total === 0) {
+    showResetFeedback("ok", "Nothing to clear — no ✓ or ✗ days marked.");
+    return;
+  }
+  const msg = `Clear all marked attendance days?\n\n` +
+              `This will remove:\n` +
+              `  • ${checks} ✓ in-office day${checks !== 1 ? "s" : ""}\n` +
+              `  • ${xs} ✗ not-in day${xs !== 1 ? "s" : ""}\n\n` +
+              `🏖 Exempt days and your periods will be kept.\n\n` +
+              `This cannot be undone.`;
+  if (!confirm(msg)) return;
+
+  for (const [k, v] of Object.entries(attendance)) {
+    if (v === "check" || v === "x") delete attendance[k];
+  }
+  saveStore("attendance", attendance);
+  renderRanges();
+  renderCalendar();
+  showResetFeedback("ok", `Cleared ${total} day${total !== 1 ? "s" : ""}.`);
+}
+
+function clearAllEdits() {
+  const dayCount = Object.keys(attendance).length;
+  const periodCount = ranges.length;
+  if (dayCount === 0 && periodCount === 0) {
+    showResetFeedback("ok", "Already empty.");
+    return;
+  }
+  const msg = `Wipe ALL data?\n\n` +
+              `This will remove:\n` +
+              `  • ${dayCount} marked day${dayCount !== 1 ? "s" : ""} (including 🏖 exempt)\n` +
+              `  • ${periodCount} period${periodCount !== 1 ? "s" : ""}\n\n` +
+              `This cannot be undone. Consider exporting a backup first.`;
+  if (!confirm(msg)) return;
+  if (!confirm("Are you absolutely sure? This will erase everything.")) return;
+
+  attendance = {};
+  ranges = [];
+  saveAll();
+  cancelForm();
+  renderRanges();
+  renderCalendar();
+  renderDrawerList();
+  showResetFeedback("ok", "Everything cleared.");
+}
+
+function showIoFeedback(type, msg) {
+  const el = document.getElementById("ioFeedback");
+  if (!el) return;
+  el.className = `io-feedback ${type}`;
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = "io-feedback"; el.textContent = ""; }, 5000);
+}
+
+// ── utils ─────────────────────────────────────────────────────────────────────
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function escAttr(s) { return escHtml(s); }
+
+// ── init ──────────────────────────────────────────────────────────────────────
+renderRanges();
+renderCalendar();
+</script>
+</body>
+</html>
